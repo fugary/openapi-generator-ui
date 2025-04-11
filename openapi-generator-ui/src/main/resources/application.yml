@@ -1,0 +1,5 @@
+server:
+  port: 9890
+spring:
+  application:
+    name: openapi-generator-ui
