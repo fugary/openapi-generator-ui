@@ -3,3 +3,7 @@ server:
 spring:
   application:
     name: openapi-generator-ui
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB

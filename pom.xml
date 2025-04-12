@@ -22,14 +22,10 @@
         <commons-fileupload.version>1.5</commons-fileupload.version>
         <swagger-parser.version>2.1.26</swagger-parser.version>
         <webjars-bootstrap.version>5.3.3</webjars-bootstrap.version>
+        <vue.version>3.5.13</vue.version>
     </properties>
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>commons-fileupload</groupId>
-                <artifactId>commons-fileupload</artifactId>
-                <version>${commons-fileupload.version}</version>
-            </dependency>
             <dependency>
                 <groupId>io.swagger.parser.v3</groupId>
                 <artifactId>swagger-parser</artifactId>
@@ -39,6 +35,11 @@
                 <groupId>org.webjars.npm</groupId>
                 <artifactId>bootstrap</artifactId>
                 <version>${webjars-bootstrap.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.webjars.npm</groupId>
+                <artifactId>vue</artifactId>
+                <version>${vue.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

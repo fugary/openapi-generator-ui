@@ -1,10 +1,82 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <title>OpenAPI Generator UI Online</title>
+    <meta charset="UTF-8">
+    <title>OpenAPI Generator UI Online</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.3/dist/css/bootstrap.min.css}"/>
+    <link rel="stylesheet" th:href="@{/css/OpenApiUI.css}"/>
 </head>
 <body>
-<h3>OpenAPI Generator UI Online</h3>
+<div class="container mt-5" id="app">
+    <div class="card">
+        <div class="card-header">
+            OpenAPI Generator UI Online
+        </div>
+        <div class="card-body">
+            <form method="post" name="apiForm" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" checked v-model="apiParam.type" name="type"
+                               id="typeUrl" value="url">
+                        <label class="form-check-label" for="typeUrl" aria-label="OpenAPI URL">OpenAPI URL</label>
+                        <div class="invalid-feedback">
+                            Open API URL is required.
+                        </div>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" v-model="apiParam.type" name="type"
+                               id="typeContent"
+                               value="content">
+                        <label class="form-check-label" for="typeContent" aria-label="OpenAPI JSON/YAML Content">OpenAPI JSON/YAML Content</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" v-model="apiParam.type" name="type"
+                               id="typeFile" value="file">
+                        <label class="form-check-label" for="typeFile"  aria-label="OpenAPI JSON/YAML File">OpenAPI JSON/YAML File</label>
+                    </div>
+                </div>
+                <div v-if="apiParam.type==='url'">
+                    <div class="mb-3">
+                        <label for="apiUrl" class="form-label" aria-label="OpenAPI URL">OpenAPI URL</label>
+                        <input type="text" name="url" v-model="apiParam.url" class="form-control" id="apiUrl"
+                               placeholder="https://petstore.swagger.io/v2/swagger.json">
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch mb-2">
+                            <label class="form-check-label" for="apiAuth">Basic Authorization
+                                <input class="form-check-input" id="apiAuth" type="checkbox" role="switch" name="auth" v-model="apiParam.auth">
+                            </label>
+                        </div>
+                        <div class="input-group" v-if="apiParam.auth">
+                            <span class="input-group-text">User Name</span>
+                            <input type="text" name="userName" v-model="apiParam.userName" class="form-control" placeholder="Username" aria-label="Username">
+                            <span class="input-group-text">Password</span>
+                            <input type="password" name="password" v-model="apiParam.password" class="form-control" placeholder="Password" aria-label="Password">
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3" v-if="apiParam.type==='content'">
+                    <label for="apiContent" class="form-label">OpenAPI JSON/YAML Content</label>
+                    <textarea v-model="apiParam.content" name="content" class="form-control" id="apiContent" rows="5"></textarea>
+                </div>
+                <div class="mb-3" v-if="apiParam.type==='file'">
+                    <label for="formFile" class="form-label">OpenAPI JSON/YAML File</label>
+                    <input class="form-control" name="file" type="file" id="formFile">
+                </div>
+                <div class="mb-3">
+                    {{openAPI}}
+                </div>
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary btn-lg">Next</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 </body>
+<script th:inline="javascript">
+    const initialApiParam = [[${apiParam}]] || {type:'url'}
+</script>
+<script th:src="@{/webjars/vue/3.5.13/dist/vue.global.js}"></script>
+<script th:src="@{/js/OpenApiUI.js}" type="module"></script>
 </html>
