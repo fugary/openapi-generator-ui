@@ -17,11 +17,10 @@ import org.springframework.web.multipart.MultipartFile;
 @Component
 public class SwaggerOpenApiProcessorImpl implements OpenApiProcessor, InitializingBean {
 
-
     @Override
     public OpenAPI process(ApiParamVo apiParam, MultipartFile file) {
         ParseOptions parseOptions = new ParseOptions();
-        parseOptions.setResolveFully(true);
+//        parseOptions.setResolveFully(true);
         SwaggerParseResult result = null;
         switch (apiParam.getType()) {
             case SystemConstants.TYPE_URL:

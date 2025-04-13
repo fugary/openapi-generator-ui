@@ -7,76 +7,216 @@
     <link rel="stylesheet" th:href="@{/css/OpenApiUI.css}"/>
 </head>
 <body>
-<div class="container mt-5" id="app">
+<div class="container mt-2" id="app" v-cloak>
     <div class="card">
         <div class="card-header">
             OpenAPI Generator UI Online
         </div>
         <div class="card-body">
-            <form method="post" name="apiForm" enctype="multipart/form-data">
+            <form method="post" novalidate name="apiForm" enctype="multipart/form-data" @submit="submitForm">
                 <div class="mb-3">
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" checked v-model="apiParam.type" name="type"
                                id="typeUrl" value="url">
                         <label class="form-check-label" for="typeUrl" aria-label="OpenAPI URL">OpenAPI URL</label>
-                        <div class="invalid-feedback">
-                            Open API URL is required.
-                        </div>
                     </div>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" v-model="apiParam.type" name="type"
                                id="typeContent"
                                value="content">
-                        <label class="form-check-label" for="typeContent" aria-label="OpenAPI JSON/YAML Content">OpenAPI JSON/YAML Content</label>
+                        <label class="form-check-label" for="typeContent" aria-label="OpenAPI JSON/YAML Content">OpenAPI
+                            JSON/YAML Content</label>
                     </div>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" v-model="apiParam.type" name="type"
                                id="typeFile" value="file">
-                        <label class="form-check-label" for="typeFile"  aria-label="OpenAPI JSON/YAML File">OpenAPI JSON/YAML File</label>
+                        <label class="form-check-label" for="typeFile" aria-label="OpenAPI JSON/YAML File">OpenAPI
+                            JSON/YAML File</label>
                     </div>
                 </div>
                 <div v-if="apiParam.type==='url'">
                     <div class="mb-3">
                         <label for="apiUrl" class="form-label" aria-label="OpenAPI URL">OpenAPI URL</label>
-                        <input type="text" name="url" v-model="apiParam.url" class="form-control" id="apiUrl"
-                               placeholder="https://petstore.swagger.io/v2/swagger.json">
+                        <input type="text" name="url" v-model="apiParam.url" class="form-control" id="apiUrl" required
+                               placeholder="OpenAPI URL">
+                        <div class="invalid-feedback">
+                            Open API URL is required.
+                        </div>
                     </div>
                     <div class="mb-3">
                         <div class="form-check form-switch mb-2">
                             <label class="form-check-label" for="apiAuth">Basic Authorization
-                                <input class="form-check-input" id="apiAuth" type="checkbox" role="switch" name="auth" v-model="apiParam.auth">
+                                <input class="form-check-input" id="apiAuth" type="checkbox" role="switch" name="auth"
+                                       v-model="apiParam.auth">
                             </label>
                         </div>
-                        <div class="input-group" v-if="apiParam.auth">
-                            <span class="input-group-text">User Name</span>
-                            <input type="text" name="userName" v-model="apiParam.userName" class="form-control" placeholder="Username" aria-label="Username">
-                            <span class="input-group-text">Password</span>
-                            <input type="password" name="password" v-model="apiParam.password" class="form-control" placeholder="Password" aria-label="Password">
+                        <div class="row" v-if="apiParam.auth">
+                            <div class="col-md-6">
+                                <label class="form-label">User Name</label>
+                                <input type="text" name="userName" v-model="apiParam.userName" class="form-control"
+                                       required
+                                       placeholder="Username" aria-label="Username">
+                                <div class="invalid-feedback">
+                                    User name is required.
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Password</label>
+                                <input type="password" name="password" v-model="apiParam.password" class="form-control"
+                                       required
+                                       placeholder="Password" aria-label="Password">
+                                <div class="invalid-feedback">
+                                    Password is required.
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="mb-3" v-if="apiParam.type==='content'">
                     <label for="apiContent" class="form-label">OpenAPI JSON/YAML Content</label>
-                    <textarea v-model="apiParam.content" name="content" class="form-control" id="apiContent" rows="5"></textarea>
+                    <textarea v-model="apiParam.content" name="content" class="form-control" id="apiContent" required
+                              rows="5"></textarea>
+                    <div class="invalid-feedback">
+                        JSON/YAML Content is required.
+                    </div>
                 </div>
                 <div class="mb-3" v-if="apiParam.type==='file'">
                     <label for="formFile" class="form-label">OpenAPI JSON/YAML File</label>
-                    <input class="form-control" name="file" type="file" id="formFile">
-                </div>
-                <div class="mb-3">
-                    {{openAPI}}
+                    <input class="form-control" name="file" type="file" id="formFile" required>
+                    <div class="invalid-feedback">
+                        JSON/YAML File is required.
+                    </div>
                 </div>
                 <div class="text-center">
-                    <button type="submit" class="btn btn-primary btn-lg">Next</button>
+                    <button type="submit" class="btn btn-primary btn-lg">Load API</button>
+                    <button type="button" v-if="apiTags?.length" class="btn btn-success btn-lg ms-2" @click="doGenerateCode">Generate</button>
                 </div>
             </form>
+        </div>
+    </div>
+    <div class="mt-2" th:if="${openAPI}">
+        <nav>
+            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-api"
+                        type="button" role="tab" aria-controls="nav-home" aria-selected="true">
+                    OpenAPI Details
+                </button>
+                <button class="nav-link" id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-config"
+                        type="button" role="tab" aria-controls="nav-profile" aria-selected="false">
+                    Generator Config
+                </button>
+            </div>
+        </nav>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="nav-api" role="tabpanel" aria-labelledby="nav-api-tab"
+                 tabindex="0">
+                <div class="accordion">
+                    <div class="accordion-item" v-for="(apiTag, index) in apiTags">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" :class="index!==0?'collapsed':''" type="button"
+                                    data-bs-toggle="collapse" :data-bs-target="'#apiTag-'+apiTag.name">
+                                <span class="text-info fs-4">{{apiTag.name}}</span>
+                                <span class="badge text-bg-secondary ms-2">
+                                <span v-if="apiTag.operations.find(opt=>opt.checked)">{{apiTag.operations.filter(opt=>opt.checked).length}} /</span>
+                                {{apiTag.operations.length}}
+                            </span>
+                                <span class="text-body-secondary ms-2"
+                                      v-if="apiTag.description">{{apiTag.description}}</span>
+                            </button>
+                        </h2>
+                        <div :id="'apiTag-'+apiTag.name" class="accordion-collapse collapse"
+                             :class="index===0?'show':''">
+                            <div class="accordion-body">
+                                <div class="form-check" v-for="operation in apiTag.operations">
+                                    <label class="form-check-label mb-2" role="button">
+                                        <input class="form-check-input" type="checkbox" v-model="operation.checked"
+                                               :value="operation.operationId">
+                                        <span class="badge" :class="'text-bg-'+(methodMap[operation.method]||'info')">{{operation.method}}</span>
+                                        <span class="ms-2" :class="'text-'+(methodMap[operation.method]||'info')">{{operation.path}}</span>
+                                        <span class="text-body-secondary ms-2" v-if="operation.summary">{{operation.summary}}</span>
+                                        <span class="badge text-bg-secondary rounded-pill ms-2"
+                                              v-custom-tooltip="operation.description"
+                                              v-if="operation.description">?</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="nav-config" role="tabpanel" aria-labelledby="nav-config-tab" tabindex="0">
+                <div class="mt-3 mb-3 row">
+                    <label class="col-sm-3 col-form-label text-end">
+                        <a :href="supportedUrls.find(supported=>supported.url===languageModel._generatorUrl)?.home"
+                           target="_blank">Generator URL</a>
+                    </label>
+                    <div class="col-sm-9">
+                        <select class="form-select" v-model="languageModel._generatorUrl">
+                            <option :value="supportedUrl.url" :key="supportedUrl.url"
+                                    v-for="supportedUrl in supportedUrls">
+                                {{supportedUrl.name}} - {{supportedUrl.url}}
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <label class="col-sm-3 col-form-label text-end">Client/Server</label>
+                    <div class="col-sm-9">
+                        <select class="form-select" v-model="languageModel._path">
+                            <option :value="generatorMode.path" :key="generatorMode.path"
+                                    v-for="generatorMode in generatorModes">
+                                {{generatorMode.name}}
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <label class="col-sm-3 col-form-label text-end">Language</label>
+                    <div class="col-sm-9">
+                        <select class="form-select" v-model="languageModel._language">
+                            <option :value="language" v-for="language in languages">{{language}}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3 row" v-for="languageOption in languageOptions">
+                    <label class="col-sm-3 col-form-label text-end">
+                        {{languageOption.label}}
+                        <span class="badge text-bg-secondary rounded-pill ms-2"
+                              v-custom-tooltip="languageOption.tooltip"
+                              v-if="languageOption.tooltip">?</span>
+                    </label>
+                    <div class="col-sm-9">
+                        <input type="text" v-if="languageOption.type==='input'"
+                               v-model="languageModel.config[languageOption.prop]" class="form-control">
+                        <select class="form-select" v-if="languageOption.type==='select'"
+                                v-model="languageModel.config[languageOption.prop]">
+                            <option :value="option.value" :key="option.value" v-for="option in languageOption.options">
+                                {{option.label}}
+                            </option>
+                        </select>
+                        <div class="form-check form-switch" v-if="languageOption.type==='switch'">
+                            <input class="form-check-input" type="checkbox" role="switch"
+                                   v-model="languageModel.config[languageOption.prop]">
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    {{languageModel}}
+                </div>
+            </div>
+        </div>
+        <div class="text-center">
+            <button type="button" v-if="apiTags?.length" class="btn btn-success btn-lg ms-2" @click="doGenerateCode">Generate</button>
         </div>
     </div>
 </div>
 </body>
 <script th:inline="javascript">
-    const initialApiParam = [[${apiParam}]] || {type:'url'}
+    const initialApiParam = [[${apiParam}]] || {type: 'url', url: 'https://petstore.swagger.io/v2/swagger.json'}
+    const initialOpenAPI = [[${openAPI}]]
+    const initialApiTags = [[${apiTags}]]
 </script>
+<script th:src="@{/webjars/bootstrap/5.3.3/dist/js/bootstrap.bundle.min.js}"></script>
 <script th:src="@{/webjars/vue/3.5.13/dist/vue.global.js}"></script>
 <script th:src="@{/js/OpenApiUI.js}" type="module"></script>
 </html>

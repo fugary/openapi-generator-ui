@@ -16,4 +16,6 @@ public class SystemConstants {
     public static final String TYPE_FILE = "file";
 
     public static final String TYPE_CONTENT = "content";
+
+    public static final String SIMPLE_API_TARGET_URL_HEADER = "simple-api-target-url";
 }
