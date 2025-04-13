@@ -9,11 +9,14 @@ const {ref, watch} = Vue
 export const supportedUrls = [{
     url: 'https://api.openapi-generator.tech/api',
     home: 'https://api.openapi-generator.tech',
-    name: 'OpenAPI Generator'
+    name: 'OpenAPI Generator Stable'
 }, {
-    url: 'https://generator.swagger.io/api',
-    home: 'https://generator.swagger.io/',
-    name: 'Swagger Generator'
+    // url: 'https://generator.swagger.io/api',
+    // home: 'https://generator.swagger.io/',
+    // name: 'Swagger Generator'
+    url: 'https://api-latest-master.openapi-generator.tech/api',
+    home: 'https://api-latest-master.openapi-generator.tech',
+    name: 'OpenAPI Generator Master'
 }];
 
 export const generatorModes = [{
@@ -68,7 +71,7 @@ export const newGenerateCode = ({baseUrl, path, language}, body, config = {}) =>
 /**
  * 初始化配置数据
  */
-export const useLanguageOptions = (init, openAPI) => {
+export const useLanguageOptions = (init, openAPI, apiTags) => {
     const languages = ref([])
     const languageConfig = ref({})
     const languageOptions = ref([])
@@ -127,7 +130,7 @@ export const useLanguageOptions = (init, openAPI) => {
                 language
             }).then(data => {
                 languageConfig.value = data
-                languageModel.config = {}
+                languageModel.value.config = {}
                 calcLanguageOptions()
             })
         }
@@ -138,12 +141,16 @@ export const useLanguageOptions = (init, openAPI) => {
         reInitLanguage();
     }
     const doGenerateCode = () => {
+        const operationIds = apiTags.value.flatMap(apiTag => apiTag.operations)
+            .filter(operation => operation.checked)
+            .map(operation => operation.operationId);
         newGenerateCode({
             path: languageModel.value._path,
             baseUrl: languageModel.value._generatorUrl,
             language: languageModel.value._language
         }, JSON.stringify({
             spec: JSON.parse(openAPI.value),
+            openapiNormalizer: operationIds.length ? [`FILTER=operationId:${operationIds.join('|')}`] : [],
             options: languageModel.value.config
         })).then(data => {
             console.log('==============data', data)

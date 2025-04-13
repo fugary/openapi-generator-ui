@@ -28,7 +28,7 @@ createApp({
             languageOptions,
             doGenerateCode,
             errorRef
-        } = useLanguageOptions(!!apiTags.value, openAPI)
+        } = useLanguageOptions(!!apiTags.value, openAPI, apiTags)
         return {
             apiParam,
             apiTags,
