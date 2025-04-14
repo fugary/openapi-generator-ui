@@ -124,7 +124,7 @@
                     <div class="accordion-item" v-for="(apiTag, index) in apiTags">
                         <h2 class="accordion-header">
                             <button class="accordion-button" :class="index!==0?'collapsed':''" type="button"
-                                    data-bs-toggle="collapse" :data-bs-target="'#apiTag-'+apiTag.name">
+                                    data-bs-toggle="collapse" :data-bs-target="'#'+apiTag.tagId">
                                 <span class="text-info fs-5">{{apiTag.name}}</span>
                                 <span class="badge rounded-pill text-bg-secondary ms-2">
                                 <span v-if="apiTag.checkedCount">{{apiTag.checkedCount}} /</span>
@@ -134,7 +134,7 @@
                                       v-if="apiTag.description">{{apiTag.description}}</span>
                             </button>
                         </h2>
-                        <div :id="'apiTag-'+apiTag.name" class="accordion-collapse collapse"
+                        <div :id="apiTag.tagId" class="accordion-collapse collapse"
                              :class="index===0?'show':''">
                             <div class="accordion-body">
                                 <div class="form-check" v-for="operation in apiTag.operations">
@@ -142,8 +142,11 @@
                                         <input class="form-check-input" type="checkbox" v-model="operation.checked"
                                                :value="operation.operationId">
                                         <span class="badge" :class="'text-bg-'+(methodMap[operation.method]||'info')">{{operation.method}}</span>
-                                        <span class="ms-2" :class="'text-'+(methodMap[operation.method]||'info')">{{operation.path}}</span>
-                                        <span class="text-body-secondary ms-2" v-if="operation.summary">{{operation.summary}}</span>
+                                        <span class="ms-2"
+                                              :class="(operation.deprecated?'text-decoration-line-through ':' ')+'text-'+(methodMap[operation.method]||'info')">{{operation.path}}</span>
+                                        <span class="text-body-secondary ms-2"
+                                              :class="operation.deprecated?'text-decoration-line-through':''"
+                                              v-if="operation.summary">{{operation.summary}}</span>
                                         <span class="badge text-bg-secondary rounded-pill ms-2"
                                               v-custom-tooltip="operation.description"
                                               v-if="operation.description">?</span>

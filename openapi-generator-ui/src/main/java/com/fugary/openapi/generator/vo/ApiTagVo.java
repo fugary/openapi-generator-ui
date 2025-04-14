@@ -14,6 +14,7 @@ import java.util.List;
 public class ApiTagVo implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
+    private String tagId;
     private String name;
     private String description;
     private List<ApiOperationVo> operations;

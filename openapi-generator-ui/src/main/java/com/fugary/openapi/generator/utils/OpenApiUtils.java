@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.BeanUtils;
@@ -94,6 +95,7 @@ public class OpenApiUtils {
         ApiTagVo apiTagVo = new ApiTagVo();
         Tag apiTag = findTag(openAPI, tag);
         apiTagVo.setName(tag);
+        apiTagVo.setTagId(DigestUtils.md2Hex(tag));
         if (apiTag != null) {
             apiTagVo.setDescription(apiTag.getDescription());
         }
@@ -108,6 +110,7 @@ public class OpenApiUtils {
         apiOperationVo.setOperationId(operation.getOperationId());
         apiOperationVo.setSummary(operation.getSummary());
         apiOperationVo.setDescription(operation.getDescription());
+        apiOperationVo.setDeprecated(operation.getDeprecated());
         return apiOperationVo;
     }
 

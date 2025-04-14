@@ -16,4 +16,5 @@ public class ApiOperationVo implements Serializable {
     private String summary = null;
     private String description = null;
     private String operationId;
+    private Boolean deprecated;
 }
