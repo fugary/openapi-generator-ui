@@ -1,3 +1,9 @@
 [v-cloak] {
     display: none;
 }
+.custom-tooltip {
+    --bs-tooltip-max-width: 400px;
+}
+.custom-tooltip .tooltip-inner {
+    text-align: left;
+}

@@ -2,6 +2,7 @@ package com.fugary.openapi.generator.vo;
 
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.List;
 @Data
 public class ApiParamsVo implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = -7676986301038603213L;
     private List<NameValue> pathParams = new ArrayList<>();
     private List<NameValue> requestParams = new ArrayList<>();

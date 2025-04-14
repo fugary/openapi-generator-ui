@@ -7,6 +7,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.HttpHeaders;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -14,6 +15,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 @Slf4j
@@ -48,12 +50,11 @@ public class UploadFileUtils {
         // 配置 Basic Auth 认证信息
         if (apiParam.isAuth() && StringUtils.isNotBlank(apiParam.getUserName()) && StringUtils.isNotBlank(apiParam.getPassword())) {
             String credentials = apiParam.getUserName() + ":" + apiParam.getPassword();
-            String base64Credentials = java.util.Base64.getEncoder().encodeToString(credentials.getBytes());
+            String base64Credentials = Base64.getEncoder().encodeToString(credentials.getBytes());
             // 创建 AuthorizationValue 对象
-            AuthorizationValue auth = new AuthorizationValue()
-                    .keyName("Authorization") // 头字段名称
-                    .value("Basic " + base64Credentials) // Basic Auth 格式
-                    .type("header"); // 指定为请求头
+            String basicAuth = "Basic " + base64Credentials;
+            AuthorizationValue auth = new AuthorizationValue(HttpHeaders.AUTHORIZATION, basicAuth, "header"); // 指定为请求头
+            return List.of(auth);
         }
         return new ArrayList<>();
     }

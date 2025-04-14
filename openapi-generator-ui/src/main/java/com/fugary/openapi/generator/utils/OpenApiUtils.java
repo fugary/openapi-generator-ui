@@ -52,7 +52,6 @@ public class OpenApiUtils {
                 List<Pair<String, Operation>> operations = getAllOperationsInAPath(pathItem);
                 return operations.stream().map(pair -> OpenApiUtils.toOperation(entry.getKey(), pair.getLeft(), pair.getRight()));
             }).collect(Collectors.groupingBy(ApiOperationVo::getTag, LinkedHashMap::new, Collectors.toList()));
-            System.out.println(pathMap);
             return pathMap.entrySet().stream().map(entry -> {
                 ApiTagVo tagVo = createTagVo(openAPI, entry.getKey());
                 tagVo.setOperations(entry.getValue());

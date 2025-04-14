@@ -1,4 +1,4 @@
-import {$downloadWithLinkClick} from "./Utils.js";
+import {$downloadWithLinkClick, getData, removeData, setData} from "./Utils.js";
 
 const {ref, watch} = Vue
 
@@ -9,14 +9,12 @@ const {ref, watch} = Vue
 export const supportedUrls = [{
     url: 'https://api.openapi-generator.tech/api',
     home: 'https://api.openapi-generator.tech',
-    name: 'OpenAPI Generator Stable'
+    name: 'OpenAPI Generator Stable',
+    supportFilter: true
 }, {
-    // url: 'https://generator.swagger.io/api',
-    // home: 'https://generator.swagger.io/',
-    // name: 'Swagger Generator'
-    url: 'https://api-latest-master.openapi-generator.tech/api',
-    home: 'https://api-latest-master.openapi-generator.tech',
-    name: 'OpenAPI Generator Master'
+    url: 'https://generator.swagger.io/api',
+    home: 'https://generator.swagger.io/',
+    name: 'Swagger Generator'
 }];
 
 export const generatorModes = [{
@@ -68,19 +66,23 @@ export const newGenerateCode = ({baseUrl, path, language}, body, config = {}) =>
     return fetch(targetUrl, Object.assign({headers, body, method: 'POST'}, config))
         .then(response => response.json())
 }
+const LANGUAGE_CONFIG_KEY = 'open-api-generator-language-config'
 /**
  * 初始化配置数据
  */
-export const useLanguageOptions = (init, openAPI, apiTags) => {
-    const languages = ref([])
-    const languageConfig = ref({})
-    const languageOptions = ref([])
-    const languageModel = ref({
+export const useLanguageOptions = (openAPI, apiTags) => {
+    const languages = ref([]);
+    const languageConfig = ref({});
+    const languageOptions = ref([]);
+    const lastLanguageModel = ref(getData(LANGUAGE_CONFIG_KEY));
+    const defaultModel = {
         _path: generatorModes[0].path,
         _generatorUrl: supportedUrls[0].url,
-        _language: init ? 'java' : '',
+        _language: 'java',
         config: {}
-    })
+    };
+    const languageModel = ref(lastLanguageModel.value || {...defaultModel});
+    const loading = ref(false);
     const errorRef = ref()
     const reInitLanguage = () => {
         loadClientLanguages({
@@ -88,6 +90,7 @@ export const useLanguageOptions = (init, openAPI, apiTags) => {
             baseUrl: languageModel.value._generatorUrl
         }).then(data => {
             languages.value = data
+            console.log('========================languages', languages.value)
             if (languageModel.value._language && !languages.value.find(lang => lang === languageModel.value._language)) {
                 if (languageModel.value._path === generatorModes[0].path) {
                     languageModel.value._language = 'java'
@@ -97,7 +100,21 @@ export const useLanguageOptions = (init, openAPI, apiTags) => {
             }
         })
     };
-    const calcLanguageOptions = () => {
+    const reInitLanguageConfig = (overwrite) => {
+        loadLanguageConfig({
+            path: languageModel.value._path,
+            baseUrl: languageModel.value._generatorUrl,
+            language: languageModel.value._language
+        }).then(data => {
+            console.log('========================languageConfig', languageConfig.value)
+            languageConfig.value = data
+            calcLanguageOptions(overwrite)
+        })
+    }
+    const calcLanguageOptions = (overwrite) => {
+        if (overwrite) {
+            languageModel.value.config = {}
+        }
         languageOptions.value = Object.keys(languageConfig.value).map(key => {
             const config = languageConfig.value[key]
             const tooltip = config.description
@@ -116,34 +133,34 @@ export const useLanguageOptions = (init, openAPI, apiTags) => {
                 option.options = Object.keys(config.enum)
                     .map(key => ({value: key, label: key + ' - ' + config.enum[key]}))
             }
-            if (config.default !== null) {
+            if (option.value && overwrite) {
                 languageModel.value.config[key] = option.value
             }
             return option
-        })
+        });
     };
-    watch(() => languageModel.value._language, (language) => {
-        if (language) {
-            loadLanguageConfig({
-                path: languageModel.value._path,
-                baseUrl: languageModel.value._generatorUrl,
-                language
-            }).then(data => {
-                languageConfig.value = data
-                languageModel.value.config = {}
-                calcLanguageOptions()
-            })
-        }
-    }, {immediate: true});
-    watch(() => languageModel.value._generatorUrl, reInitLanguage)
-    watch(() => languageModel.value._path, reInitLanguage)
-    if (init) {
+    watch(() => languageModel.value._language, () => reInitLanguageConfig(true));
+    watch(() => [languageModel.value._generatorUrl, languageModel.value._path], reInitLanguage);
+    watch(apiTags, () => {
         reInitLanguage();
-    }
+        reInitLanguageConfig(!lastLanguageModel.value);
+    });
+    const resetLanguageConfig = () => {
+        removeData(LANGUAGE_CONFIG_KEY);
+        lastLanguageModel.value = null
+        languageModel.value = {...defaultModel};
+        reInitLanguage();
+        reInitLanguageConfig(true);
+    };
+    const saveLanguageConfig = () => {
+        lastLanguageModel.value = {...languageModel.value}
+        setData(LANGUAGE_CONFIG_KEY, lastLanguageModel.value)
+    };
     const doGenerateCode = () => {
         const operationIds = apiTags.value.flatMap(apiTag => apiTag.operations)
             .filter(operation => operation.checked)
             .map(operation => operation.operationId);
+        loading.value = true;
         newGenerateCode({
             path: languageModel.value._path,
             baseUrl: languageModel.value._generatorUrl,
@@ -153,20 +170,25 @@ export const useLanguageOptions = (init, openAPI, apiTags) => {
             openapiNormalizer: operationIds.length ? [`FILTER=operationId:${operationIds.join('|')}`] : [],
             options: languageModel.value.config
         })).then(data => {
-            console.log('==============data', data)
+            lastLanguageModel.value = {...languageModel.value}
+            setData(LANGUAGE_CONFIG_KEY, lastLanguageModel.value)
             if (data.link) {
                 const link = data.link.replace('http://', 'https://')
                 $downloadWithLinkClick(link)
             }
         }, err => {
             errorRef.value = err.error
-        })
+        }).finally(() => loading.value = false);
     }
     return {
         errorRef,
+        lastLanguageModel,
         languageModel,
         languages,
         languageOptions,
+        loading,
+        resetLanguageConfig,
+        saveLanguageConfig,
         doGenerateCode
     }
 }

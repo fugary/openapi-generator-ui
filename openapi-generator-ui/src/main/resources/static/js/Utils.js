@@ -16,13 +16,14 @@ export const setData = (key, data) => {
 /**
  * 获取值
  * @param key
- * @param data
- * @returns {boolean}
+ * @returns {Object}
  */
-export const getData = (key, data) => {
+export const getData = (key) => {
     try {
-        localStorage.setItem(key, JSON.stringify(data));
-        return true;
+        const data = localStorage.getItem(key);
+        if (data) {
+            return JSON.parse(data);
+        }
     } catch (error) {
         console.error(`Store.set 错误 [key=${key}]:`, error);
         return false;
