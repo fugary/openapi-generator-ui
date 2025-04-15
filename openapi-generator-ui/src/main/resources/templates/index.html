@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>OpenAPI Generator UI Online</title>
+    <meta name="description" content="OpenAPI Generator UI Online tool">
+    <meta name="keywords"
+          content="OpenAPI Generator UI Swagger generator swagger parser UI Online free online tool java go swift kotlin php python ruby c# c c++ c# c++ java go swift kotlin php python ruby nodejs javascript typescript">
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.3/dist/css/bootstrap.min.css}"/>
     <link rel="stylesheet" th:href="@{/css/OpenApiUI.css}"/>
 </head>
@@ -247,4 +250,5 @@
 <script th:src="@{/webjars/bootstrap/5.3.3/dist/js/bootstrap.bundle.min.js}"></script>
 <script th:src="@{/webjars/vue/3.5.13/dist/vue.global.js}"></script>
 <script th:src="@{/js/OpenApiUI.js}" type="module"></script>
+<script th:if="${!#strings.isEmpty(adsenceAddress)}" async th:src="${adsenceAddress}" crossorigin="anonymous"></script>
 </html>

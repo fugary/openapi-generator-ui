@@ -46,9 +46,13 @@ public class IndexController {
     @Value("${custom.build.version:1.0.0}")
     private String buildVersion;
 
+    @Value("${custom.adsence.address:}")
+    private String adsenceAddress;
+
     @GetMapping(path = {"/", "/index"})
     public String index(Model model) {
         model.addAttribute("buildVersion", buildVersion);
+        model.addAttribute("adsenceAddress", adsenceAddress);
         return "index";
     }
 

@@ -9,3 +9,6 @@ spring:
       max-file-size: 10MB
   config:
     import: classpath:build-version.properties
+custom:
+  adsence:
+    address: ${ADSENCE_ADDRESS:}
