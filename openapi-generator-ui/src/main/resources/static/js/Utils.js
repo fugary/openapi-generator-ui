@@ -52,5 +52,6 @@ export const $downloadWithLinkClick = (downloadUrl) => {
     const downloadLink = document.createElement('a')
     downloadLink.href = downloadUrl
     downloadLink.download = 'download'
+    downloadLink.target = '_blank'
     downloadLink.click()
 }

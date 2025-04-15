@@ -17,8 +17,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -41,8 +43,12 @@ public class IndexController {
     @Autowired
     private ApiInvokeProcessor apiInvokeProcessor;
 
+    @Value("${custom.build.version:1.0.0}")
+    private String buildVersion;
+
     @GetMapping(path = {"/", "/index"})
-    public String index() {
+    public String index(Model model) {
+        model.addAttribute("buildVersion", buildVersion);
         return "index";
     }
 

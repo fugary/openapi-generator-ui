@@ -7,3 +7,10 @@
 .custom-tooltip .tooltip-inner {
     text-align: left;
 }
+.abs-checkbox {
+    position: absolute;
+    top: 2px;
+    left: 10px;
+    z-index: 10;
+    cursor: pointer;
+}

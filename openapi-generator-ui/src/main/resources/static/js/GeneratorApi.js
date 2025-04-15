@@ -90,7 +90,6 @@ export const useLanguageOptions = (openAPI, apiTags) => {
             baseUrl: languageModel.value._generatorUrl
         }).then(data => {
             languages.value = data
-            console.log('========================languages', languages.value)
             if (languageModel.value._language && !languages.value.find(lang => lang === languageModel.value._language)) {
                 if (languageModel.value._path === generatorModes[0].path) {
                     languageModel.value._language = 'java'
@@ -106,7 +105,6 @@ export const useLanguageOptions = (openAPI, apiTags) => {
             baseUrl: languageModel.value._generatorUrl,
             language: languageModel.value._language
         }).then(data => {
-            console.log('========================languageConfig', languageConfig.value)
             languageConfig.value = data
             calcLanguageOptions(overwrite)
         })

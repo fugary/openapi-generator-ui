@@ -75,6 +75,9 @@ createApp({
             saveLanguageConfig,
             doGenerateCode
         } = useLanguageOptions(openAPI, apiTags)
+        const checkTagOperations = (apiTag, checked) => {
+            apiTag.operations?.forEach(operation => operation.checked = checked);
+        };
         return {
             apiParam,
             openAPI,
@@ -92,6 +95,7 @@ createApp({
             submitForm,
             loading,
             generateLoading,
+            checkTagOperations,
             resetLanguageConfig,
             saveLanguageConfig,
             doGenerateCode

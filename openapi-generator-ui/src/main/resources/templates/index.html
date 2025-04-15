@@ -122,14 +122,19 @@
                  tabindex="0">
                 <div class="accordion">
                     <div class="accordion-item" v-for="(apiTag, index) in apiTags">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button" :class="index!==0?'collapsed':''" type="button"
+                        <h2 class="accordion-header position-relative">
+                            <div class="form-check-label abs-checkbox">
+                                <input class="form-check-input float-start" type="checkbox"
+                                       @change="checkTagOperations(apiTag, apiTag.checked)"
+                                       v-model="apiTag.checked">
+                            </div>
+                            <button class="accordion-button ps-5" :class="index!==0?'collapsed':''" type="button"
                                     data-bs-toggle="collapse" :data-bs-target="'#'+apiTag.tagId">
                                 <span class="text-info fs-5">{{apiTag.name}}</span>
                                 <span class="badge rounded-pill text-bg-secondary ms-2">
                                 <span v-if="apiTag.checkedCount">{{apiTag.checkedCount}} /</span>
                                 {{apiTag.operations.length}}
-                            </span>
+                                </span>
                                 <span class="text-body-secondary ms-2"
                                       v-if="apiTag.description">{{apiTag.description}}</span>
                             </button>
@@ -233,6 +238,9 @@
                       v-if="checkedOperations?.length">{{checkedOperations?.length||0}}</span>
             </button>
         </div>
+    </div>
+    <div class="m-2 text-center">
+        Build Version: <span th:text="${buildVersion}"></span>
     </div>
 </div>
 </body>
