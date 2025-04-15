@@ -91,6 +91,9 @@
                         JSON/YAML File is required.
                     </div>
                 </div>
+                <div class="alert alert-danger" role="alert" v-if="errorRef">
+                    {{errorRef}}
+                </div>
                 <div class="text-center">
                     <button type="submit" class="btn btn-primary btn-lg" :disabled="loading">
                         <span class="spinner-border spinner-border-sm" v-if="loading" aria-hidden="true"></span>

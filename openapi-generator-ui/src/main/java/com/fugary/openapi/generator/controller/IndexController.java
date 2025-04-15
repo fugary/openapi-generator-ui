@@ -1,5 +1,6 @@
 package com.fugary.openapi.generator.controller;
 
+import com.fugary.openapi.generator.constants.SystemConstants;
 import com.fugary.openapi.generator.processor.ApiInvokeProcessor;
 import com.fugary.openapi.generator.processor.OpenApiProcessor;
 import com.fugary.openapi.generator.utils.OpenAPIFilterUtils;
@@ -62,7 +63,8 @@ public class IndexController {
         List<MultipartFile> uploadFiles = UploadFileUtils.getUploadFiles(request);
         MultipartFile multipartFile = uploadFiles.isEmpty() ? null : uploadFiles.getFirst();
         OpenAPI openAPI = openApiProcessor.process(apiParam, multipartFile);
-        SimpleResult<String> result = SimpleResult.error("OpenAPI process error");
+        SimpleResult<String> result = SimpleResult.error(SystemConstants.TYPE_URL.equals(apiParam.getType())
+                ? "OpenAPI url load or parse error" : "OpenAPI content parse error");
         if (openAPI != null) {
             result = SimpleResult.ok(SchemaJsonUtils.toJson(openAPI, SchemaJsonUtils.isV31(openAPI)));
             result.add("apiTags", (Serializable) OpenApiUtils.toTags(openAPI));

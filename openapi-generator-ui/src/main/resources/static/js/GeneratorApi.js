@@ -64,13 +64,12 @@ export const newGenerateCode = ({baseUrl, path, language}, body, config = {}) =>
         'Content-Type': 'application/json'
     }
     return fetch(targetUrl, Object.assign({headers, body, method: 'POST'}, config))
-        .then(response => response.json())
 }
 const LANGUAGE_CONFIG_KEY = 'open-api-generator-language-config'
 /**
  * 初始化配置数据
  */
-export const useLanguageOptions = (openAPI, apiTags) => {
+export const useLanguageOptions = (openAPI, apiTags, errorRef) => {
     const languages = ref([]);
     const languageConfig = ref({});
     const languageOptions = ref([]);
@@ -83,7 +82,6 @@ export const useLanguageOptions = (openAPI, apiTags) => {
     };
     const languageModel = ref(lastLanguageModel.value || {...defaultModel});
     const loading = ref(false);
-    const errorRef = ref()
     const reInitLanguage = () => {
         loadClientLanguages({
             path: languageModel.value._path,
@@ -159,6 +157,7 @@ export const useLanguageOptions = (openAPI, apiTags) => {
             .filter(operation => operation.checked)
             .map(operation => operation.operationId);
         loading.value = true;
+        errorRef.value = null;
         newGenerateCode({
             path: languageModel.value._path,
             baseUrl: languageModel.value._generatorUrl,
@@ -167,15 +166,18 @@ export const useLanguageOptions = (openAPI, apiTags) => {
             spec: JSON.parse(openAPI.value),
             openapiNormalizer: operationIds.length ? [`FILTER=operationId:${operationIds.join('|')}`] : [],
             options: languageModel.value.config
-        })).then(data => {
-            lastLanguageModel.value = {...languageModel.value}
-            setData(LANGUAGE_CONFIG_KEY, lastLanguageModel.value)
-            if (data.link) {
-                const link = data.link.replace('http://', 'https://')
-                $downloadWithLinkClick(link)
+        })).then(async response => {
+            if (response.ok) {
+                const data = await response.json();
+                lastLanguageModel.value = {...languageModel.value};
+                setData(LANGUAGE_CONFIG_KEY, lastLanguageModel.value);
+                if (data.link) {
+                    const link = data.link.replace('http://', 'https://')
+                    $downloadWithLinkClick(link)
+                }
+            } else {
+                errorRef.value = await response.text();
             }
-        }, err => {
-            errorRef.value = err.error
         }).finally(() => loading.value = false);
     }
     return {

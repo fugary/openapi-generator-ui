@@ -11,11 +11,10 @@ const METHOD_MAP = {
 
 /**
  * 提交表单
- * @param apiParam
- * @param fileRef
+ * @param errorRef
  * @returns {(function(*): void)|*}
  */
-const useSubmitForm = () => {
+const useSubmitForm = (errorRef) => {
     const apiParam = ref({type: 'url', url: 'https://petstore.swagger.io/v2/swagger.json'});
     const apiTags = ref([]);
     const openAPI = ref();
@@ -40,11 +39,16 @@ const useSubmitForm = () => {
             }
             Object.entries(apiParam.value).forEach(([key, value]) => formData.append(key, value));
             loading.value = true;
+            errorRef.value = null;
             fetch('/loadApi', {method: 'POST', body: formData})
                 .then(response => response.json())
                 .then(data => {
-                    openAPI.value = data.resultData;
-                    apiTags.value = data.addons?.apiTags || [];
+                    if (data.success) {
+                        openAPI.value = data.resultData;
+                        apiTags.value = data.addons?.apiTags || [];
+                    } else {
+                        errorRef.value = data.message;
+                    }
                 }).finally(() => loading.value = false);
         }
         event.preventDefault();
@@ -63,18 +67,18 @@ const useSubmitForm = () => {
 
 createApp({
     setup() {
-        const {apiParam, apiTags, openAPI, fileRef, submitForm, loading, checkedOperations} = useSubmitForm();
+        const errorRef = ref()
+        const {apiParam, apiTags, openAPI, fileRef, submitForm, loading, checkedOperations} = useSubmitForm(errorRef);
         const {
             languageModel,
             lastLanguageModel,
             languages,
             languageOptions,
             loading: generateLoading,
-            errorRef,
             resetLanguageConfig,
             saveLanguageConfig,
             doGenerateCode
-        } = useLanguageOptions(openAPI, apiTags)
+        } = useLanguageOptions(openAPI, apiTags, errorRef)
         const checkTagOperations = (apiTag, checked) => {
             apiTag.operations?.forEach(operation => operation.checked = checked);
         };
