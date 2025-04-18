@@ -72,9 +72,9 @@ export const supportedUrls = [{
     name: 'OpenAPI Generator Stable',
     supportFilter: true
 }, {
-    url: 'https://generator.swagger.io/api',
-    home: 'https://generator.swagger.io/',
-    name: 'Swagger Generator'
+    url: 'https://api-latest-master.openapi-generator.tech/api',
+    home: 'https://api-latest-master.openapi-generator.tech/',
+    name: 'OpenAPI Generator Latest Master'
 }];
 
 export const generatorModes = [{
@@ -107,6 +107,26 @@ export const loadClientLanguages = ({baseUrl, path}, config = {}) => {
 export const loadLanguageConfig = ({baseUrl, path, language}, config = {}) => {
     return fetch(`${baseUrl}${path}/${language}`, Object.assign({method: 'GET'}, config))
         .then(response => response.json())
+}
+/**
+ * 后台过滤operationIds
+ * @param data
+ * @param config
+ * @returns {Promise<any>}
+ */
+export const filterApi = (data, config = {}) => {
+    return fetch('/filterApi', {
+        method: 'POST', body: JSON.stringify(data),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }).then(response => response.json()).then(data => {
+        if (data.success) {
+            return data.resultData;
+        } else {
+            return Promise.reject(data.message);
+        }
+    });
 }
 /**
  * 生成代码
@@ -212,21 +232,34 @@ export const useLanguageOptions = (openAPI, apiTags, errorRef) => {
         lastLanguageModel.value = {...languageModel.value}
         setData(LANGUAGE_CONFIG_KEY, lastLanguageModel.value)
     };
-    const doGenerateCode = () => {
+    const doGenerateCode = async () => {
         const operationIds = apiTags.value.flatMap(apiTag => apiTag.operations)
             .filter(operation => operation.checked)
             .map(operation => operation.operationId);
+        const currentUrlConf = supportedUrls.find(urlConf => urlConf.url === languageModel.value._generatorUrl);
         loading.value = true;
         errorRef.value = null;
+        let filter = {};
+        let openApiStr = openAPI.value;
+        if (operationIds.length) {
+            if (currentUrlConf.supportFilter) {
+                filter = {openapiNormalizer: operationIds.length ? [`FILTER=operationId:${operationIds.join('|')}`] : []}
+            } else {
+                openApiStr = await filterApi({
+                    openAPI: openAPI.value,
+                    operationIds
+                }).catch(err => errorRef.value = err)
+                    .finally((() => loading.value = false))
+            }
+        }
         newGenerateCode({
             path: languageModel.value._path,
             baseUrl: languageModel.value._generatorUrl,
             language: languageModel.value._language
-        }, JSON.stringify({
-            spec: JSON.parse(openAPI.value),
-            openapiNormalizer: operationIds.length ? [`FILTER=operationId:${operationIds.join('|')}`] : [],
+        }, JSON.stringify(Object.assign({
+            spec: JSON.parse(openApiStr),
             options: languageModel.value.config
-        })).then(async response => {
+        }, filter))).then(async response => {
             if (response.ok) {
                 const data = await response.json();
                 lastLanguageModel.value = {...languageModel.value};

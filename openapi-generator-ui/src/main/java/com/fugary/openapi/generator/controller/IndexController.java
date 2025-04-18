@@ -74,7 +74,7 @@ public class IndexController {
 
     @ResponseBody
     @PostMapping("filterApi")
-    public SimpleResult<String> filterApi(@ModelAttribute ApiFilterVo apiParam) {
+    public SimpleResult<String> filterApi(@RequestBody ApiFilterVo apiParam) {
         SimpleResult<String> result = SimpleResult.error("OpenAPI process error");
         SwaggerParseResult parseResult = new OpenAPIParser().readContents(apiParam.getOpenAPI(), null, new ParseOptions());
         OpenAPI openAPI = parseResult.getOpenAPI();
