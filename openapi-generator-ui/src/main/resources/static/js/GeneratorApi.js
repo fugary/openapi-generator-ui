@@ -1,4 +1,64 @@
-import {$downloadWithLinkClick, getData, removeData, setData} from "./Utils.js";
+export const Utils = (function () {
+    /**
+     * 设置值
+     * @param key
+     * @param data
+     * @returns {boolean}
+     */
+    const setData = (key, data) => {
+        try {
+            localStorage.setItem(key, JSON.stringify(data));
+            return true;
+        } catch (error) {
+            console.error(`Store.set 错误 [key=${key}]:`, error);
+            return false;
+        }
+    };
+    /**
+     * 获取值
+     * @param key
+     * @returns {Object}
+     */
+    const getData = (key) => {
+        try {
+            const data = localStorage.getItem(key);
+            if (data) {
+                return JSON.parse(data);
+            }
+        } catch (error) {
+            console.error(`Store.set 错误 [key=${key}]:`, error);
+            return false;
+        }
+    }
+    /**
+     * 删除值
+     * @param key
+     * @returns {boolean}
+     */
+    const removeData = (key) => {
+        try {
+            localStorage.removeItem(key);
+            return true;
+        } catch (error) {
+            console.error(`Store.remove 错误 [key=${key}]:`, error);
+            return false;
+        }
+    };
+    /**
+     * 下载链接点击
+     * @param downloadUrl
+     */
+    const $downloadWithLinkClick = (downloadUrl) => {
+        const downloadLink = document.createElement('a')
+        downloadLink.href = downloadUrl
+        downloadLink.download = 'download'
+        downloadLink.target = '_blank'
+        downloadLink.click()
+    };
+    return {setData, getData, removeData, $downloadWithLinkClick}
+})();
+
+const {$downloadWithLinkClick, getData, removeData, setData} = Utils;
 
 const {ref, watch} = Vue
 
