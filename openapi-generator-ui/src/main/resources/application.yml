@@ -9,6 +9,13 @@ spring:
       max-file-size: 10MB
   config:
     import: classpath:build-version.properties
+logging: # 日志相关配置
+  level:
+    root: info
+  config: classpath:logback-spring.xml
+  file:
+    path: ${LOG_DIR:logs/${spring.application.name}}
+    name: ${logging.file.path}/${spring.application.name}.log
 custom:
   adsence:
     address: ${ADSENCE_ADDRESS:}
