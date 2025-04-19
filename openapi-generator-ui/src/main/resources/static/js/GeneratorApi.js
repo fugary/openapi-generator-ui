@@ -248,7 +248,7 @@ export const useLanguageOptions = (openAPI, apiTags, errorRef) => {
                 openApiStr = await filterApi({
                     openAPI: openAPI.value,
                     operationIds
-                }).catch(err => errorRef.value = err)
+                }).catch(err => errorRef.value = err?.value)
                     .finally((() => loading.value = false))
             }
         }
@@ -271,6 +271,8 @@ export const useLanguageOptions = (openAPI, apiTags, errorRef) => {
             } else {
                 errorRef.value = await response.text();
             }
+        }, err => {
+            errorRef.value = err?.message
         }).finally(() => loading.value = false);
     }
     return {

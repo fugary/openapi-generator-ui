@@ -43,12 +43,15 @@ const useSubmitForm = (errorRef) => {
             fetch('/loadApi', {method: 'POST', body: formData})
                 .then(response => response.json())
                 .then(data => {
-                    if (data.success) {
-                        openAPI.value = data.resultData;
-                        apiTags.value = data.addons?.apiTags || [];
-                    } else {
+                    openAPI.value = data.resultData||'';
+                    apiTags.value = data.addons?.apiTags || [];
+                    if (!data.success) {
                         errorRef.value = data.message;
                     }
+                }, err => {
+                    openAPI.value = '';
+                    apiTags.value = [];
+                    errorRef.value = err?.message;
                 }).finally(() => loading.value = false);
         }
         event.preventDefault();
