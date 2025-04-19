@@ -18,7 +18,7 @@ public interface ApiInvokeProcessor {
      * @param mockParams 请求参数
      * @return
      */
-    ResponseEntity<byte[]> invoke(ApiParamsVo mockParams);
+    <T> ResponseEntity<T> invoke(ApiParamsVo mockParams, Class<T> clazz);
 
     /**
      * 请求和相依发送
@@ -27,5 +27,5 @@ public interface ApiInvokeProcessor {
      * @param response
      * @return
      */
-    ResponseEntity<?> invoke(HttpServletRequest request, HttpServletResponse response);
+    <T> ResponseEntity<T> invoke(HttpServletRequest request, HttpServletResponse response, Class<T> clazz);
 }

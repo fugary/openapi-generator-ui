@@ -11,6 +11,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -41,36 +42,36 @@ public class DefaultApiInvokeProcessorImpl implements ApiInvokeProcessor, Initia
 
 
     @Override
-    public ResponseEntity<?> invoke(HttpServletRequest request, HttpServletResponse response) {
-        return invoke(OpenApiUtils.toApiParams(request));
+    public <T> ResponseEntity<T> invoke(HttpServletRequest request, HttpServletResponse response, Class<T> clazz) {
+        return invoke(OpenApiUtils.toApiParams(request), clazz);
     }
 
     @Override
-    public ResponseEntity<byte[]> invoke(ApiParamsVo mockParams) {
+    public <T> ResponseEntity<T> invoke(ApiParamsVo mockParams, Class<T> clazz) {
         String requestUrl = getRequestUrl(mockParams.getTargetUrl(), mockParams);
         HttpEntity<?> entity = new HttpEntity<>(mockParams.getRequestBody(), getHeaders(mockParams));
         if (OpenApiUtils.isCompatibleWith(mockParams, MediaType.MULTIPART_FORM_DATA, MediaType.APPLICATION_FORM_URLENCODED)) {
             entity = new HttpEntity<>(getMultipartBody(mockParams), getHeaders(mockParams));
         }
         try {
-            ResponseEntity<byte[]> responseEntity = restTemplate.exchange(requestUrl,
+            ResponseEntity<T> responseEntity = restTemplate.exchange(requestUrl,
                     Optional.of(HttpMethod.valueOf(mockParams.getMethod())).orElse(HttpMethod.GET),
-                    entity, byte[].class);
-            responseEntity = processRedirect(responseEntity, mockParams, entity);
+                    entity, clazz);
+            responseEntity = processRedirect(responseEntity, mockParams, entity, clazz);
             return OpenApiUtils.removeProxyHeaders(responseEntity);
         } catch (HttpClientErrorException e) {
             return OpenApiUtils.removeProxyHeaders(ResponseEntity.status(e.getStatusCode())
                     .headers(e.getResponseHeaders())
-                    .body(e.getResponseBodyAsByteArray()));
+                    .body(e.getResponseBodyAs(clazz)));
         } catch (Exception e) {
             log.error("获取数据错误", e);
         }
         return ResponseEntity.notFound().build();
     }
 
-    protected ResponseEntity<byte[]> processRedirect(ResponseEntity<byte[]> responseEntity,
-                                                   ApiParamsVo mockParams,
-                                                   HttpEntity<?> entity) {
+    protected <T> ResponseEntity<T> processRedirect(ResponseEntity<T> responseEntity,
+                                                    ApiParamsVo mockParams,
+                                                    HttpEntity<?> entity, Class<T> clazz) {
         HttpStatusCode httpStatus = responseEntity.getStatusCode();
         if (httpStatus.is3xxRedirection()) {
             URI location = responseEntity.getHeaders().getLocation();
@@ -80,7 +81,7 @@ public class DefaultApiInvokeProcessorImpl implements ApiInvokeProcessor, Initia
                         .build(true).toUri();
                 responseEntity = restTemplate.exchange(targetUri,
                         Optional.of(HttpMethod.valueOf(mockParams.getMethod())).orElse(HttpMethod.GET),
-                        entity, byte[].class);
+                        entity, clazz);
             }
         }
         return responseEntity;
@@ -130,9 +131,8 @@ public class DefaultApiInvokeProcessorImpl implements ApiInvokeProcessor, Initia
     protected HttpHeaders getHeaders(ApiParamsVo paramsVo) {
         HttpHeaders headers = new HttpHeaders();
         paramsVo.getHeaderParams().forEach(nv -> {
-            if (StringUtils.equalsIgnoreCase(nv.getName(), HttpHeaders.ACCEPT_ENCODING)
-                    && StringUtils.containsIgnoreCase(nv.getValue(), "zstd")) {
-                nv.setValue("gzip, deflate, br");
+            if (StringUtils.equalsIgnoreCase(nv.getName(), HttpHeaders.ACCEPT_ENCODING)) {
+                nv.setValue("gzip, deflate");
             }
             headers.addIfAbsent(nv.getName(), nv.getValue());
         });
@@ -152,6 +152,6 @@ public class DefaultApiInvokeProcessorImpl implements ApiInvokeProcessor, Initia
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        this.restTemplate = restTemplateBuilder.build();
+        this.restTemplate = restTemplateBuilder.requestFactory(HttpComponentsClientHttpRequestFactory.class).build();
     }
 }

@@ -19,6 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -50,10 +51,14 @@ public class IndexController {
     @Value("${custom.adsence.address:}")
     private String adsenceAddress;
 
+    @Value("${custom.alert.content:}")
+    private String alertContent;
+
     @GetMapping(path = {"/", "/index"})
     public String index(Model model) {
         model.addAttribute("buildVersion", buildVersion);
         model.addAttribute("adsenceAddress", adsenceAddress);
+        model.addAttribute("alertContent", alertContent);
         return "index";
     }
 
@@ -90,9 +95,15 @@ public class IndexController {
      *
      * @return
      */
+    @ResponseBody
     @RequestMapping("/proxy/**")
-    public ResponseEntity<?> proxyApi(HttpServletRequest request, HttpServletResponse response) {
-        return apiInvokeProcessor.invoke(request, response);
+    public String proxyApi(HttpServletRequest request, HttpServletResponse response) {
+        ResponseEntity<String> responseEntity = apiInvokeProcessor.invoke(request, response, String.class);
+        MediaType contentType = responseEntity.getHeaders().getContentType();
+        if (contentType != null) {
+            response.setContentType(contentType.toString());
+        }
+        return responseEntity.getBody();
     }
 
 }
