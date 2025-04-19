@@ -40,6 +40,8 @@ const useSubmitForm = (errorRef) => {
             Object.entries(apiParam.value).forEach(([key, value]) => formData.append(key, value));
             loading.value = true;
             errorRef.value = null;
+            openAPI.value = '';
+            apiTags.value = [];
             fetchWithTimeout('/loadApi', {method: 'POST', body: formData})
                 .then(response => response.json())
                 .then(data => {
@@ -49,8 +51,6 @@ const useSubmitForm = (errorRef) => {
                         errorRef.value = data.message;
                     }
                 }, err => {
-                    openAPI.value = '';
-                    apiTags.value = [];
                     errorRef.value = err?.message;
                 }).finally(() => loading.value = false);
         }
