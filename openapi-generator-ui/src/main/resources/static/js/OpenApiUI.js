@@ -1,4 +1,4 @@
-import {fetchWithTimeout, generatorModes, supportedUrls, useLanguageOptions} from './GeneratorApi.js'
+const {fetchWithTimeout, generatorModes, supportedUrls, useLanguageOptions} = GeneratorApi;
 
 const {createApp, ref, watch} = Vue
 
@@ -45,7 +45,7 @@ const useSubmitForm = (errorRef) => {
             fetchWithTimeout('/loadApi', {method: 'POST', body: formData})
                 .then(response => response.json())
                 .then(data => {
-                    openAPI.value = data.resultData||'';
+                    openAPI.value = data.resultData || '';
                     apiTags.value = data.addons?.apiTags || [];
                     if (!data.success) {
                         errorRef.value = data.message;
