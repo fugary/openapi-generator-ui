@@ -1,3 +1,21 @@
+export async function fetchWithTimeout(url, options = {}, timeout = 60000) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    try {
+        const response = await fetch(url, {
+            ...options,
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        return response;
+    } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            throw new Error(`Fetch resource timed out after ${timeout}ms`);
+        }
+        throw error;
+    }
+}
 export const Utils = (function () {
     /**
      * 设置值
@@ -143,7 +161,7 @@ export const newGenerateCode = ({baseUrl, path, language}, body, config = {}) =>
         'simple-api-target-url': baseUrl,
         'Content-Type': 'application/json'
     }
-    return fetch(targetUrl, Object.assign({headers, body, method: 'POST'}, config))
+    return fetchWithTimeout(targetUrl, Object.assign({headers, body, method: 'POST'}, config))
 }
 const LANGUAGE_CONFIG_KEY = 'open-api-generator-language-config'
 /**

@@ -1,4 +1,4 @@
-import {generatorModes, supportedUrls, useLanguageOptions} from './GeneratorApi.js'
+import {fetchWithTimeout, generatorModes, supportedUrls, useLanguageOptions} from './GeneratorApi.js'
 
 const {createApp, ref, watch} = Vue
 
@@ -40,7 +40,7 @@ const useSubmitForm = (errorRef) => {
             Object.entries(apiParam.value).forEach(([key, value]) => formData.append(key, value));
             loading.value = true;
             errorRef.value = null;
-            fetch('/loadApi', {method: 'POST', body: formData})
+            fetchWithTimeout('/loadApi', {method: 'POST', body: formData})
                 .then(response => response.json())
                 .then(data => {
                     openAPI.value = data.resultData||'';
