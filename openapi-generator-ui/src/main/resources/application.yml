@@ -17,5 +17,7 @@ logging: # 日志相关配置
     path: ${LOG_DIR:logs/${spring.application.name}}
     name: ${logging.file.path}/${spring.application.name}.log
 custom:
+  alert:
+    content: We do not retain any API file content on our server. However, we will directly transmit the API content to third-party servers (e.g., https://api.openapi-generator.tech/index.html) for code generation. Please do not upload sensitive information such as passwords.
   adsence:
     address: ${ADSENCE_ADDRESS:}

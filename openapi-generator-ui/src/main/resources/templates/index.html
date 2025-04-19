@@ -11,6 +11,7 @@
 </head>
 <body>
 <div class="container mt-2" id="app" v-cloak>
+    <div class="alert alert-success" role="alert" th:if="${alertContent}" th:text="${alertContent}"></div>
     <div class="card">
         <div class="card-header">
             OpenAPI Generator UI Online
