@@ -84,8 +84,7 @@
     const supportedUrls = [{
         url: 'https://api.openapi-generator.tech/api',
         home: 'https://api.openapi-generator.tech',
-        name: 'OpenAPI Generator Stable',
-        supportFilter: true
+        name: 'OpenAPI Generator Stable'
     }, {
         url: 'https://api-latest-master.openapi-generator.tech/api',
         home: 'https://api-latest-master.openapi-generator.tech/',

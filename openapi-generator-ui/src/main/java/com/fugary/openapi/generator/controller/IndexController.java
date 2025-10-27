@@ -102,6 +102,7 @@ public class IndexController {
         MediaType contentType = responseEntity.getHeaders().getContentType();
         if (contentType != null) {
             response.setContentType(contentType.toString());
+            response.setStatus(responseEntity.getStatusCode().value());
         }
         return responseEntity.getBody();
     }
