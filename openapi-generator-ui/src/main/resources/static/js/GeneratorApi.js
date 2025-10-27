@@ -263,9 +263,10 @@
                         openAPI: openAPI.value,
                         operationIds
                     }).catch(err => errorRef.value = err?.value)
-                        .finally((() => loading.value = false))
+                        .finally(() => loading.value = false)
                 }
             }
+            loading.value = true;
             newGenerateCode({
                 path: languageModel.value._path,
                 baseUrl: languageModel.value._generatorUrl,
