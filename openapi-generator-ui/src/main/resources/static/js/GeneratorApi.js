@@ -253,28 +253,25 @@
             const currentUrlConf = supportedUrls.find(urlConf => urlConf.url === languageModel.value._generatorUrl);
             loading.value = true;
             errorRef.value = null;
-            let filter = {};
-            let openApiStr = openAPI.value;
-            if (operationIds.length) {
-                if (currentUrlConf.supportFilter) {
-                    filter = {openapiNormalizer: operationIds.length ? [`FILTER=operationId:${operationIds.join('|')}`] : []}
-                } else {
-                    openApiStr = await filterApi({
-                        openAPI: openAPI.value,
-                        operationIds
-                    }).catch(err => errorRef.value = err?.value)
-                        .finally(() => loading.value = false)
-                }
+            const openApiStr = await filterApi({
+                openAPI: openAPI.value,
+                operationIds
+            }).catch(err => errorRef.value = err?.value)
+                .finally(() => loading.value = false)
+            let openAPIUrl = null;
+            if (/^https?:\/\//.test(openApiStr)) {
+                openAPIUrl = openApiStr
             }
             loading.value = true;
             newGenerateCode({
                 path: languageModel.value._path,
                 baseUrl: languageModel.value._generatorUrl,
                 language: languageModel.value._language
-            }, JSON.stringify(Object.assign({
-                spec: JSON.parse(openApiStr),
+            }, JSON.stringify({
+                spec: openAPIUrl ? null : JSON.parse(openApiStr),
+                openAPIUrl,
                 options: languageModel.value.config
-            }, filter))).then(async response => {
+            })).then(async response => {
                 if (response.ok) {
                     const data = await response.json();
                     lastLanguageModel.value = {...languageModel.value};

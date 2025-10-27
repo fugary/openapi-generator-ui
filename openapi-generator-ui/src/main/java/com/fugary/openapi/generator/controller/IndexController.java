@@ -17,16 +17,21 @@ import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -54,6 +59,9 @@ public class IndexController {
     @Value("${custom.alert.content:}")
     private String alertContent;
 
+    @Value("${custom.request.max-content-length:1024000}")
+    private int maxContentLength;
+
     @GetMapping(path = {"/", "/index"})
     public String index(Model model) {
         model.addAttribute("buildVersion", buildVersion);
@@ -79,13 +87,23 @@ public class IndexController {
 
     @ResponseBody
     @PostMapping("filterApi")
-    public SimpleResult<String> filterApi(@RequestBody ApiFilterVo apiParam) {
+    public SimpleResult<String> filterApi(HttpServletRequest request, @RequestBody ApiFilterVo apiParam) {
         SimpleResult<String> result = SimpleResult.error("OpenAPI process error");
-        SwaggerParseResult parseResult = new OpenAPIParser().readContents(apiParam.getOpenAPI(), null, new ParseOptions());
+        String content = apiParam.getOpenAPI();
+        SwaggerParseResult parseResult = new OpenAPIParser().readContents(content, null, new ParseOptions());
         OpenAPI openAPI = parseResult.getOpenAPI();
-        if (openAPI != null) {
-            openAPI = OpenAPIFilterUtils.filterByOperationIds(openAPI, apiParam.getOperationIds());
-            result = SimpleResult.ok(SchemaJsonUtils.toJson(openAPI, SchemaJsonUtils.isV31(openAPI)));
+        boolean validOpenApi = openAPI != null;
+        if (validOpenApi) {
+            if (!CollectionUtils.isEmpty(apiParam.getOperationIds())) {
+                openAPI = OpenAPIFilterUtils.filterByOperationIds(openAPI, apiParam.getOperationIds());
+                content = SchemaJsonUtils.toJson(openAPI, SchemaJsonUtils.isV31(openAPI));
+            }
+            if (OpenAPIFilterUtils.isApiContentExceeded(content, maxContentLength)) {
+                // 用content生成一个当前服务器的https://xxx.com/openApi/${md5(content)}.json地址，文件存在临时文件夹中访问时可以获取
+                result = OpenAPIFilterUtils.generateOpenUrl(content, request);
+            } else {
+                result = SimpleResult.ok(content);
+            }
         }
         return result;
     }
@@ -105,6 +123,19 @@ public class IndexController {
             response.setStatus(responseEntity.getStatusCode().value());
         }
         return responseEntity.getBody();
+    }
+
+
+    /**
+     * 调试API
+     *
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping(value = "/openApi/{apiFile}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public String openApiFile(@PathVariable("apiFile") String apiFile) throws IOException {
+        File file = new File(OpenAPIFilterUtils.getApiTempDir(), apiFile);
+        return FileUtils.readFileToString(file, StandardCharsets.UTF_8.name());
     }
 
 }

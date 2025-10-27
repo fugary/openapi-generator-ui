@@ -1,5 +1,6 @@
 package com.fugary.openapi.generator.utils;
 
+import com.fugary.openapi.generator.vo.SimpleResult;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.PathItem;
@@ -9,9 +10,20 @@ import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.ObjectSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.SystemProperties;
+import org.springframework.util.DigestUtils;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -21,8 +33,79 @@ import java.util.stream.Collectors;
  * @author Gary.Fu
  * @date 2025/4/13
  */
+@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class OpenAPIFilterUtils {
+
+    // 注册 shutdown hook
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                Path tempPath = getApiTempDir().toPath();
+                if (Files.exists(tempPath)) {
+                    Files.walk(tempPath).sorted(Comparator.reverseOrder()).forEach(path -> {
+                        try {
+                            Files.deleteIfExists(path);
+                        } catch (IOException e) {
+                            log.error("删除临时文件失败", e);
+                        }
+                    });
+                }
+            } catch (IOException e) {
+                log.error("删除临时文件失败", e);
+            }
+        }));
+    }
+
+    /**
+     * 超大判断
+     *
+     * @param content
+     * @param size
+     * @return
+     */
+    public static boolean isApiContentExceeded(String content, int size) {
+        byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
+        int sizeInBytes = bytes.length;
+        return sizeInBytes > size;
+    }
+
+    /**
+     * 临时文件夹
+     *
+     * @return
+     */
+    public static File getApiTempDir() {
+        return new File(System.getProperty(SystemProperties.JAVA_IO_TMPDIR), "openapi-temp");
+    }
+
+    /**
+     * 生成OpenAPI地址
+     *
+     * @param content
+     * @param request
+     * @return
+     */
+    public static SimpleResult<String> generateOpenUrl(String content, HttpServletRequest request) {
+        SimpleResult<String> result;
+        // 用content生成一个当前服务器的https://xxx.com/openApi/${md5(content)}.json地址，文件存在临时文件夹中访问时可以获取
+        try {
+            String md5 = DigestUtils.md5DigestAsHex(content.getBytes(StandardCharsets.UTF_8));
+            File file = new File(OpenAPIFilterUtils.getApiTempDir(), md5 + ".json");
+            FileUtils.forceMkdirParent(file);
+            FileUtils.write(file, content, StandardCharsets.UTF_8);
+            // 构造动态 URL，例如：https://host:port/openApi/{md5}.json
+            String baseUrl = ServletUriComponentsBuilder.fromRequestUri(request)
+                    .replacePath(null)
+                    .build()
+                    .toUriString();
+            String accessUrl = baseUrl + "/openApi/" + md5 + ".json";
+            result = SimpleResult.ok(accessUrl);
+        } catch (IOException e) {
+            result = SimpleResult.error("Failed to write OpenAPI temp file: " + e.getMessage());
+        }
+        return result;
+    }
 
     /**
      * 根据 operationIds 过滤 OpenAPI 规范
