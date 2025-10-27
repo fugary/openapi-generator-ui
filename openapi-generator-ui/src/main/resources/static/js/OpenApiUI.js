@@ -17,6 +17,7 @@ const METHOD_MAP = {
 const useSubmitForm = (errorRef) => {
     const apiParam = ref({type: 'url', url: 'https://petstore.swagger.io/v2/swagger.json'});
     const apiTags = ref([]);
+    const currentType = ref()
     const openAPI = ref();
     const fileRef = ref();
     const loading = ref(false);
@@ -47,6 +48,7 @@ const useSubmitForm = (errorRef) => {
                 .then(data => {
                     openAPI.value = data.resultData || '';
                     apiTags.value = data.addons?.apiTags || [];
+                    currentType.value = apiParam.value.type;
                     if (!data.success) {
                         errorRef.value = data.message;
                     }
@@ -59,6 +61,7 @@ const useSubmitForm = (errorRef) => {
     };
     return {
         apiParam,
+        currentType,
         apiTags,
         openAPI,
         fileRef,
@@ -71,7 +74,7 @@ const useSubmitForm = (errorRef) => {
 createApp({
     setup() {
         const errorRef = ref()
-        const {apiParam, apiTags, openAPI, fileRef, submitForm, loading, checkedOperations} = useSubmitForm(errorRef);
+        const {apiParam, currentType, apiTags, openAPI, fileRef, submitForm, loading, checkedOperations} = useSubmitForm(errorRef);
         const {
             languageModel,
             lastLanguageModel,
@@ -88,6 +91,7 @@ createApp({
         return {
             apiParam,
             openAPI,
+            currentType,
             apiTags,
             fileRef,
             checkedOperations,

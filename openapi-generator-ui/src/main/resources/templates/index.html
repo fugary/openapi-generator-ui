@@ -100,7 +100,7 @@
                         <span class="spinner-border spinner-border-sm" v-if="loading" aria-hidden="true"></span>
                         Load OpenAPI
                     </button>
-                    <button type="button" v-if="apiTags?.length" class="btn btn-success btn-lg ms-3"
+                    <button type="button" v-if="currentType===apiParam.type&&apiTags?.length" class="btn btn-success btn-lg ms-3"
                             :disabled="generateLoading" @click="doGenerateCode">
                         <span class="spinner-border spinner-border-sm" v-if="generateLoading" aria-hidden="true"></span>
                         Generate {{checkedOperations?.length? 'Selected':'All'}}
@@ -111,7 +111,7 @@
             </form>
         </div>
     </div>
-    <div class="mt-2" v-if="apiTags?.length">
+    <div class="mt-2" v-if="currentType===apiParam.type&&apiTags?.length">
         <nav>
             <div class="nav nav-tabs" id="nav-tab" role="tablist">
                 <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-api"
