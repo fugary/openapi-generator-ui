@@ -92,7 +92,8 @@
     }, {
         url: `${window.location.protocol}//${window.location.hostname}${window.location.port ? ':' + window.location.port : ''}`,
         home: 'https://github.com/fugary/openapi-generator-ui',
-        name: 'Local OpenAPI Generator UI'
+        name: 'Local OpenAPI Generator UI',
+        isLocal: true
     }];
 
     const generatorModes = [{
@@ -151,12 +152,15 @@
      * @param baseUrl
      * @param path
      * @param language
+     * @param largeContent
      * @param body
      * @param config
      * @returns {Promise<*>}
      */
     const newGenerateCode = ({baseUrl, path, language, largeContent}, body, config = {}) => {
-        let targetUrl = largeContent ? `${path}/${language}` : `/proxy${path}/${language}` // 服务端代理发送
+        const currentUrlConf = supportedUrls.find(urlConf => urlConf.url === baseUrl);
+        const isLocal = currentUrlConf && currentUrlConf.isLocal
+        const targetUrl = largeContent || isLocal ? `${path}/${language}` : `/proxy${path}/${language}` // 服务端代理发送
         const headers = {
             'simple-api-target-url': baseUrl,
             'Content-Type': 'application/json'
