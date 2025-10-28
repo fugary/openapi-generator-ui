@@ -8,7 +8,7 @@ import com.fugary.openapi.generator.vo.GenRequestVo;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.openapitools.codegen.DefaultGenerator;
+import org.openapitools.codegen.*;
 import org.openapitools.codegen.config.CodegenConfigurator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
@@ -23,8 +23,10 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -40,12 +42,39 @@ public class OnlineGeneratorController {
     @Autowired
     private GenerateResultStorage genStorage;
 
+    @GetMapping("/clients")
+    public List<String> getClients() {
+        return CodegenConfigLoader.getAll().stream()
+                .filter(config -> config.getTag() == CodegenType.CLIENT)
+                .map(CodegenConfig::getName)
+                .collect(Collectors.toList());
+    }
+
+    // 获取所有 client generator
+    @GetMapping("/clients/{language}")
+    public Map<String, Object> getClientConfig(@PathVariable("language") String language) {
+        return getGeneratorConfig(language);
+    }
+
     @PostMapping("/clients/{language}")
     public Map<String, String> generateClient(
             HttpServletRequest request,
             @PathVariable String language,
             @RequestBody GenRequestVo requestVo) throws IOException {
         return generateAndOutput(request, requestVo, "client", language);
+    }
+
+    @GetMapping("/servers")
+    public List<String> getServers() {
+        return CodegenConfigLoader.getAll().stream()
+                .filter(config -> config.getTag() == CodegenType.SERVER)
+                .map(CodegenConfig::getName)
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/servers/{framework}")
+    public Map<String, Object> getServerConfig(@PathVariable("framework") String framework) {
+        return getGeneratorConfig(framework);
     }
 
     @PostMapping("/servers/{framework}")
@@ -133,6 +162,18 @@ public class OnlineGeneratorController {
         FileUtils.deleteQuietly(tempSpecFile.toFile());
         FileUtils.deleteQuietly(tempDir.toFile());
         return zipPath;
+    }
+
+    private Map<String, Object> getGeneratorConfig(String language) {
+        CodegenConfig config = CodegenConfigLoader.forName(language);
+        if (config == null) {
+            throw new IllegalArgumentException("Unknown generator: " + language);
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        for (CliOption opt : config.cliOptions()) {
+            result.put(opt.getOpt(), opt);
+        }
+        return result;
     }
 }
 

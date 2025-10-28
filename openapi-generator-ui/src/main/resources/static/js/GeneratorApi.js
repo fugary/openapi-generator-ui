@@ -89,6 +89,10 @@
         url: 'https://api-latest-master.openapi-generator.tech/api',
         home: 'https://api-latest-master.openapi-generator.tech/',
         name: 'OpenAPI Generator Latest Master'
+    }, {
+        url: `${window.location.protocol}//${window.location.hostname}${window.location.port ? ':' + window.location.port : ''}`,
+        home: 'https://github.com/fugary/openapi-generator-ui',
+        name: 'Local OpenAPI Generator UI'
     }];
 
     const generatorModes = [{
