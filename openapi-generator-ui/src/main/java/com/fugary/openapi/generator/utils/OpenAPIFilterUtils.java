@@ -1,6 +1,5 @@
 package com.fugary.openapi.generator.utils;
 
-import com.fugary.openapi.generator.vo.SimpleResult;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.PathItem;
@@ -14,9 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemProperties;
-import org.springframework.util.DigestUtils;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.File;
@@ -76,35 +73,22 @@ public class OpenAPIFilterUtils {
      * @return
      */
     public static File getApiTempDir() {
-        return new File(System.getProperty(SystemProperties.JAVA_IO_TMPDIR), "openapi-temp");
+        return new File(System.getProperty(SystemProperties.JAVA_IO_TMPDIR), "gen-openapi-output");
     }
 
     /**
-     * 生成OpenAPI地址
+     * 计算当前服务器全路径
      *
-     * @param content
      * @param request
+     * @param path
      * @return
      */
-    public static SimpleResult<String> generateOpenUrl(String content, HttpServletRequest request) {
-        SimpleResult<String> result;
-        // 用content生成一个当前服务器的https://xxx.com/openApi/${md5(content)}.json地址，文件存在临时文件夹中访问时可以获取
-        try {
-            String md5 = DigestUtils.md5DigestAsHex(content.getBytes(StandardCharsets.UTF_8));
-            File file = new File(OpenAPIFilterUtils.getApiTempDir(), md5 + ".json");
-            FileUtils.forceMkdirParent(file);
-            FileUtils.write(file, content, StandardCharsets.UTF_8);
-            // 构造动态 URL，例如：https://host:port/openApi/{md5}.json
-            String baseUrl = ServletUriComponentsBuilder.fromRequestUri(request)
-                    .replacePath(null)
-                    .build()
-                    .toUriString();
-            String accessUrl = baseUrl + "/openApi/" + md5 + ".json";
-            result = SimpleResult.ok(accessUrl);
-        } catch (IOException e) {
-            result = SimpleResult.error("Failed to write OpenAPI temp file: " + e.getMessage());
-        }
-        return result;
+    public static String getCurrentUrlPath(HttpServletRequest request, String path) {
+        String baseUrl = ServletUriComponentsBuilder.fromRequestUri(request)
+                .replacePath(null)
+                .build()
+                .toUriString();
+        return baseUrl + path;
     }
 
     /**

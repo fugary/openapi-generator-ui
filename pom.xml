@@ -21,6 +21,7 @@
         <java.version>21</java.version>
         <commons-fileupload.version>1.5</commons-fileupload.version>
         <swagger-parser.version>2.1.25</swagger-parser.version>
+        <openapi-generator.version>7.16.0</openapi-generator.version>
         <webjars-bootstrap.version>5.3.3</webjars-bootstrap.version>
         <vue.version>3.5.13</vue.version>
     </properties>
@@ -30,6 +31,11 @@
                 <groupId>io.swagger.parser.v3</groupId>
                 <artifactId>swagger-parser</artifactId>
                 <version>${swagger-parser.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator</artifactId>
+                <version>${openapi-generator.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.webjars.npm</groupId>

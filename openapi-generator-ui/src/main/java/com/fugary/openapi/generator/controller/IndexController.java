@@ -17,7 +17,6 @@ import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -28,10 +27,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -98,11 +94,9 @@ public class IndexController {
                 openAPI = OpenAPIFilterUtils.filterByOperationIds(openAPI, apiParam.getOperationIds());
                 content = SchemaJsonUtils.toJson(openAPI, SchemaJsonUtils.isV31(openAPI));
             }
+            result = SimpleResult.ok(content);
             if (OpenAPIFilterUtils.isApiContentExceeded(content, maxContentLength)) {
-                // 用content生成一个当前服务器的https://xxx.com/openApi/${md5(content)}.json地址，文件存在临时文件夹中访问时可以获取
-                result = OpenAPIFilterUtils.generateOpenUrl(content, request);
-            } else {
-                result = SimpleResult.ok(content);
+                result.add("largeContent", true);
             }
         }
         return result;
@@ -124,18 +118,4 @@ public class IndexController {
         }
         return responseEntity.getBody();
     }
-
-
-    /**
-     * 调试API
-     *
-     * @return
-     */
-    @ResponseBody
-    @RequestMapping(value = "/openApi/{apiFile}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public String openApiFile(@PathVariable("apiFile") String apiFile) throws IOException {
-        File file = new File(OpenAPIFilterUtils.getApiTempDir(), apiFile);
-        return FileUtils.readFileToString(file, StandardCharsets.UTF_8.name());
-    }
-
 }

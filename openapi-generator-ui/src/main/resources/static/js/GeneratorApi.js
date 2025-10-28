@@ -136,7 +136,7 @@
             }
         }).then(response => response.json()).then(data => {
             if (data.success) {
-                return data.resultData;
+                return data;
             } else {
                 return Promise.reject(data.message);
             }
@@ -151,13 +151,13 @@
      * @param config
      * @returns {Promise<*>}
      */
-    const newGenerateCode = ({baseUrl, path, language}, body, config = {}) => {
-        let targetUrl = `/proxy${path}/${language}` // 服务端代理发送
+    const newGenerateCode = ({baseUrl, path, language, largeContent}, body, config = {}) => {
+        let targetUrl = largeContent ? `${path}/${language}` : `/proxy${path}/${language}` // 服务端代理发送
         const headers = {
             'simple-api-target-url': baseUrl,
             'Content-Type': 'application/json'
         }
-        return fetchWithTimeout(targetUrl, Object.assign({headers, body, method: 'POST'}, config))
+        return fetchWithTimeout(targetUrl, Object.assign({headers, body, method: 'POST'}, config), 180000)
     }
     const LANGUAGE_CONFIG_KEY = 'open-api-generator-language-config'
     /**
@@ -250,26 +250,23 @@
             const operationIds = apiTags.value.flatMap(apiTag => apiTag.operations)
                 .filter(operation => operation.checked)
                 .map(operation => operation.operationId);
-            const currentUrlConf = supportedUrls.find(urlConf => urlConf.url === languageModel.value._generatorUrl);
             loading.value = true;
             errorRef.value = null;
-            const openApiStr = await filterApi({
+            const filteredData = await filterApi({
                 openAPI: openAPI.value,
                 operationIds
             }).catch(err => errorRef.value = err?.value)
                 .finally(() => loading.value = false)
-            let openAPIUrl = null;
-            if (/^https?:\/\//.test(openApiStr)) {
-                openAPIUrl = openApiStr
-            }
+            const openApiStr = filteredData.resultData;
+            const largeContent = filteredData.addons?.largeContent || false
             loading.value = true;
             newGenerateCode({
+                largeContent,
                 path: languageModel.value._path,
                 baseUrl: languageModel.value._generatorUrl,
                 language: languageModel.value._language
             }, JSON.stringify({
-                spec: openAPIUrl ? null : JSON.parse(openApiStr),
-                openAPIUrl,
+                spec: JSON.parse(openApiStr),
                 options: languageModel.value.config
             })).then(async response => {
                 if (response.ok) {
@@ -277,7 +274,10 @@
                     lastLanguageModel.value = {...languageModel.value};
                     setData(LANGUAGE_CONFIG_KEY, lastLanguageModel.value);
                     if (data.link) {
-                        const link = data.link.replace('http://', 'https://')
+                        let link = data.link
+                        if (location.href.startsWith("https://")) {
+                            link = data.link.replace('http://', 'https://')
+                        }
                         $downloadWithLinkClick(link)
                     }
                 } else {
