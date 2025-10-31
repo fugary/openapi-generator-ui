@@ -10,6 +10,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.openapitools.codegen.*;
 import org.openapitools.codegen.config.CodegenConfigurator;
+import org.openapitools.codegen.languages.AbstractJavaCodegen;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -137,6 +138,11 @@ public class OnlineGeneratorController {
         configurator.setInputSpec(tempSpecFile.toAbsolutePath().toString());
         configurator.setGeneratorName(language);
         configurator.setOutputDir(tempDir.toAbsolutePath().toString());
+        Object output = request.getOptions().get(AbstractJavaCodegen.TEST_OUTPUT);
+        if (output instanceof CharSequence && StringUtils.contains((CharSequence) output, "${project.build.directory}")) {
+            output = StringUtils.replace((String) output, "${project.build.directory}", tempDir.toAbsolutePath().toString());
+            request.getOptions().put(AbstractJavaCodegen.TEST_OUTPUT, output);
+        }
         configurator.setAdditionalProperties(request.getOptions());
         generator.opts(configurator.toClientOptInput()).generate();
         // 打包为 zip
